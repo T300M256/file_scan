@@ -15,6 +15,20 @@ import tempfile
 import os
 import glob
 import time
+import datetime
+import file_scan
+
+
+EXP_REPORT_1 = """##### file_scan.py Report"""
+### {{DATE AND TIME GO HERE}} ###
+EXP_REPORT_2 = """
+##############################
+#### redundant content - identical md5sum
+### 044c764d45303dc30f7ef356e2ecedf0
+../same_content1.txt
+../same_content2.txt
+"""
+
 
 class TestFileScan(unittest.TestCase):
     
@@ -25,6 +39,11 @@ class TestFileScan(unittest.TestCase):
         ...files will cover various clutter scenarious
         ...a config file (proably)
         """
+        
+        date_of_report = datetime.datetime.now().ctime()
+        # construct the example report...adding dynamic date (e.g., date)
+        exp_report_txt = EXP_REPORT_1 +"\n"+"##### "+ date_of_report +EXP_REPORT_2
+        
         # create a temporary directory that should disappear when we are done
         self.tdir = tempfile.TemporaryDirectory(prefix="test_file_scan")
         # create some files for scenarious
@@ -36,11 +55,13 @@ class TestFileScan(unittest.TestCase):
         #print("You have one minute to check if files exist in "+self.tdir.name)
         #time.sleep(60)
         
-        #os.unlink(os.path(tdir.name))
         
-        
-    def testFoo(self):
-        pass
+    def test_report_text(self):
+        """
+        Verfiy the report text is what we expect.
+        """
+        obs_report = file_scan.get_report_string()
+        self.assertEqual(obs_report, exp_report)
     
     def tearDown(self):
         self.tdir.cleanup() # remove of temp directory
