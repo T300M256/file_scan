@@ -28,6 +28,20 @@ EXP_REPORT_2 = """
 ../same_content1.txt
 ../same_content2.txt
 """
+EXP_REPORT_3 = """
+##############################
+#### potential compressed and uncompressed files
+### foobar
+### foobar.Z
+### foobar.gz
+### foobar.bz2
+### foobar.tar
+### foobar.tar.Z
+### foobar.tar.gz
+### foobar.tar.bz2
+
+"""
+
 
 
 class TestFileScan(unittest.TestCase):
@@ -52,6 +66,23 @@ class TestFileScan(unittest.TestCase):
             fh = open(self.tdir.name+"/"+fn,"w")
             fh.write("arbitrary content")
             fh.close()
+        # prepare a files for a basename with typical compressed extension suffixs   
+        self.uncomp_filename = "foobar"
+        fh = open(self.tdir.name+"/"+"foobar","w")
+        fh.close()
+        for ext1 in ["","tar"]:
+            suffixes = ['foobar']
+            if ext1:
+                suffixes.append(ext1)
+            for ext2 in ["","Z","gz","bz2", "zip"]:
+                if ext2:
+                    if len(suffixes) == 3:
+                        suffixes[2] == ext2
+                    else:
+                        suffixes.append(ext2)
+                #print(str(full))
+                print(".".join(suffixes))
+                
         #print("You have one minute to check if files exist in "+self.tdir.name)
         #time.sleep(60)
         
