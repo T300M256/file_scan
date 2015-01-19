@@ -26,8 +26,7 @@ EXP_REPORT_2 = """
 #### redundant content - identical md5sum
 ### 044c764d45303dc30f7ef356e2ecedf0
 ../same_content1.txt
-../same_content2.txt
-"""
+../same_content2.txt"""
 EXP_REPORT_3 = """
 ##############################
 #### potential compressed and uncompressed files
@@ -56,8 +55,8 @@ class TestFileScan(unittest.TestCase):
         
         date_of_report = datetime.datetime.now().ctime()
         # construct the example report...adding dynamic date (e.g., date)
-        self.exp_report_txt = EXP_REPORT_1 +"\n"+"##### "+ date_of_report +EXP_REPORT_2
-        
+        self.exp_report_txt = EXP_REPORT_1 +"\n"+"##### "+ date_of_report +EXP_REPORT_2+EXP_REPORT_3        
+        #print(self.exp_report_txt)
         # create a temporary directory that should disappear when we are done
         self.tdir = tempfile.TemporaryDirectory(prefix="test_file_scan")
         # create some files for scenarious
@@ -75,13 +74,12 @@ class TestFileScan(unittest.TestCase):
             if ext1:
                 suffixes.append(ext1)
             for ext2 in ["","Z","gz","bz2", "zip"]:
+                fn = ".".join(suffixes)
                 if ext2:
-                    if len(suffixes) == 3:
-                        suffixes[2] == ext2
-                    else:
-                        suffixes.append(ext2)
-                #print(str(full))
-                print(".".join(suffixes))
+                    fn = fn + "." + ext2
+                fh = open(self.tdir.name+"/"+fn,"w")
+                fh.close()
+                
                 
         #print("You have one minute to check if files exist in "+self.tdir.name)
         #time.sleep(60)
