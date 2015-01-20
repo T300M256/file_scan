@@ -16,29 +16,42 @@ import os
 import glob
 import time
 import datetime
+from subprocess import call
 import file_scan
 
 
 EXP_REPORT_1 = """##### file_scan.py Report"""
 ### {{DATE AND TIME GO HERE}} ###
+### /scanned/parent/dir/here ###
 EXP_REPORT_2 = """
 ##############################
 #### redundant content - identical md5sum
 ### 044c764d45303dc30f7ef356e2ecedf0
-../same_content1.txt
-../same_content2.txt"""
+same_content1.txt
+same_content2.txt"""
 EXP_REPORT_3 = """
 ##############################
 #### potential compressed and uncompressed files
-### foobar
-### foobar.Z
-### foobar.gz
-### foobar.bz2
-### foobar.tar
-### foobar.tar.Z
-### foobar.tar.gz
-### foobar.tar.bz2
-
+foobar
+foobar.Z
+foobar.gz
+foobar.bz2
+foobar.tar
+foobar.tar.Z
+foobar.tar.gz
+foobar.tar.bz2
+/spam/eggs
+/spam/eggs.Z
+/spam/eggs.gz
+/spam/eggs.bz2
+/spam/eggs.tar
+/spam/eggs.tar.Z
+/spam/eggs.tar.gz
+/spam/eggs.tar.bz2
+##############################
+#### files not accessed in 6 months
+chalupa/batman.txt
+christopher.foo
 """
 
 
@@ -56,7 +69,7 @@ class TestFileScan(unittest.TestCase):
         date_of_report = datetime.datetime.now().ctime()
         # construct the example report...adding dynamic date (e.g., date)
         self.exp_report_txt = EXP_REPORT_1 +"\n"+"##### "+ date_of_report +EXP_REPORT_2+EXP_REPORT_3        
-        #print(self.exp_report_txt)
+        print(self.exp_report_txt)
         # create a temporary directory that should disappear when we are done
         self.tdir = tempfile.TemporaryDirectory(prefix="test_file_scan")
         # create some files for scenarious
@@ -66,21 +79,33 @@ class TestFileScan(unittest.TestCase):
             fh.write("arbitrary content")
             fh.close()
         # prepare a files for a basename with typical compressed extension suffixs   
-        self.uncomp_filename = "foobar"
-        fh = open(self.tdir.name+"/"+"foobar","w")
-        fh.close()
-        for ext1 in ["","tar"]:
-            suffixes = ['foobar']
-            if ext1:
-                suffixes.append(ext1)
-            for ext2 in ["","Z","gz","bz2", "zip"]:
-                fn = ".".join(suffixes)
-                if ext2:
-                    fn = fn + "." + ext2
-                fh = open(self.tdir.name+"/"+fn,"w")
-                fh.close()
-                
-                
+        #self.uncomp_filename = "foobar"
+        os.makedirs(self.tdir.name+"/"+"spam")
+        for base in ['foobar','spam/eggs']:
+            fh = open(self.tdir.name+"/"+base,"w")
+            fh.close()
+            for ext1 in ["","tar"]:
+                suffixes = [base]
+                if ext1:
+                    suffixes.append(ext1)
+                for ext2 in ["","Z","gz","bz2", "zip"]:
+                    fn = ".".join(suffixes)
+                    if ext2:
+                        fn = fn + "." + ext2
+                    fh = open(self.tdir.name+"/"+fn,"w")
+                    fh.close()
+        
+        # try to make files for representing old files
+        os.makedirs(self.tdir.name+"/"+"chalupa")
+        for fn in ["chalupa/batman.txt", "christopher.foo"]:
+            fh = open(self.tdir.name+"/"+fn,"w")
+            fh.close()
+            # use the following command to make old access time stamps:
+            # /usr/bin/touch -a -t 201312311200 foo.bar # date is noon on Dec 31 2013
+            retcall = call(["/usr/bin/touch","-a","-t","201312311200",self.tdir.name+"/"+fn])
+            if retcall != 0:
+                print("failed to change access time for "+fn)
+                sys.exit()
         #print("You have one minute to check if files exist in "+self.tdir.name)
         #time.sleep(60)
         

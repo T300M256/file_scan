@@ -13,6 +13,8 @@ January 18, 2015        Created
 import os
 import glob
 
+# note: we can use "find {{dir}}* -atime +30" to get files not accessed for 30 days
+
 
 def get_report_string():
     pass
