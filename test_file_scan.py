@@ -49,11 +49,15 @@ foobar.tar.bz2
 /spam/eggs.tar.gz
 /spam/eggs.tar.bz2
 ##############################
-#### files not accessed in 6 months
+#### files not accessed in 180 days
 chalupa/batman.txt
 christopher.foo
 """
 
+EXP_CONFIG = """####################
+### this is our example config file
+access_time = 30 * 6 # about 6 months or 180 days
+"""
 
 
 class TestFileScan(unittest.TestCase):
@@ -66,6 +70,7 @@ class TestFileScan(unittest.TestCase):
         ...a config file (proably)
         """
         
+        self.maxDiff = None # so we can see long differences
         date_of_report = datetime.datetime.now().ctime()
         # construct the example report...adding dynamic date (e.g., date)
         self.exp_report_txt = EXP_REPORT_1 +"\n"+"##### "+ date_of_report +EXP_REPORT_2+EXP_REPORT_3        
@@ -108,18 +113,22 @@ class TestFileScan(unittest.TestCase):
                 sys.exit()
         #print("You have one minute to check if files exist in "+self.tdir.name)
         #time.sleep(60)
+        self.config_file = "config.py"
+        #cf = open(self.config_file,"w")
+        #cf.write(EXP_CONFIG)
+        #cf.close()
         
         
     def test_report_text(self):
         """
         Verfiy the report text is what we expect.
         """
-        obs_report = file_scan.get_report_string()
+        obs_report = file_scan.get_report_string(self.tdir)
         self.assertEqual(obs_report, self.exp_report_txt)
     
     def tearDown(self):
         self.tdir.cleanup() # remove of temp directory
-        
+        #os.unlink(self.config_file)
     
 if __name__ == "__main__":
     unittest.main()
