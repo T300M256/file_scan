@@ -74,7 +74,7 @@ class TestFileScan(unittest.TestCase):
         date_of_report = datetime.datetime.now().ctime()
         # construct the example report...adding dynamic date (e.g., date)
         self.exp_report_txt = EXP_REPORT_1 +"\n"+"##### "+ date_of_report +EXP_REPORT_2+EXP_REPORT_3        
-        print(self.exp_report_txt)
+        #print(self.exp_report_txt)
         # create a temporary directory that should disappear when we are done
         self.tdir = tempfile.TemporaryDirectory(prefix="test_file_scan")
         # create some files for scenarious
@@ -123,7 +123,7 @@ class TestFileScan(unittest.TestCase):
         """
         Verfiy the report text is what we expect.
         """
-        obs_report = file_scan.get_report_string(self.tdir)
+        obs_report = file_scan.get_report_string(self.tdir.name)
         self.assertEqual(obs_report, self.exp_report_txt)
     
     def tearDown(self):
