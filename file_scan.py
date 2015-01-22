@@ -21,35 +21,35 @@ HEADER = "#"*30+"\n" # header line
 DAYS_OLD = 6 * 30
 # note: we can use "find {{dir}}* -atime +30" to get files not accessed for 30 days
 
+iwd = os.curdir
+
 def find_old_files(directory):
+    """
+    return a list of files in the given directory that have not been accessed
+    in the time specified by DAYS_OLD
+    """
     
+    # go to the directory
+    os.chdir(directory)
     
-    #subprocess.Popen("find /Users/Todd/Downloads/ -atime +1", shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #>>> (out2, err2) = find2.communicate()
-    #>>> files2 = out2.decode().split()
-    #>>> files2      
-    
+    # construct the find command to interogate the directory
     find_cmd = ["find"]
-    find_cmd.append(directory+"/*")
+    find_cmd.append("*")
     find_cmd.append("-atime")
     find_cmd.append("+"+str(DAYS_OLD))
+    # print("find command: "+" ".join(find_cmd)+"\n")
     
-    print("find command: "+" ".join(find_cmd)+"\n") # what gets printed executes on the command line as expected
-    
-    #time.sleep(60)
-    
+    # run the find command
     try:
         find = subprocess.Popen(" ".join(find_cmd),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-        # might not need...universal_newlines=True
     except:
         raise
+    # get the standard output
+    out, err = find.communicate() # get the standard output
+    found = out.decode().split() # split the text into a list
     
-    out, err = find.communicate()
-    
-    found = out.decode().split()
-    
-    print("found:\n"+str(found))
-    print("err:\n"+err.decode())
+    # go back to our starting directory 
+    os.chdir(iwd)
         
     return(found)
 
