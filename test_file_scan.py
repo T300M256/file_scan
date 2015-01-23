@@ -28,7 +28,8 @@ EXP_REPORT_2 = """
 #### redundant content - identical md5sum
 ### 044c764d45303dc30f7ef356e2ecedf0
 same_content1.txt
-same_content2.txt"""
+same_content2.txt
+spam/same_content3.txt"""
 EXP_REPORT_3 = """
 ##############################
 #### potential compressed and uncompressed files
@@ -78,16 +79,18 @@ class TestFileScan(unittest.TestCase):
         # create a temporary directory that should disappear when we are done
         self.tdir = tempfile.TemporaryDirectory(prefix="test_file_scan")
         # create some files for scenarious
-        #same_content_files = ["same_content1.txt", "same_content2.txt"]
-        for fn in ["same_content1.txt", "samecontent2.txt"]:
+        os.makedirs(self.tdir.name+"/"+"spam")
+        for fn in ["same_content1.txt", "same_content2.txt", "spam/same_content3.txt"]:
             fh = open(self.tdir.name+"/"+fn,"w")
             fh.write("arbitrary content")
             fh.close()
-        # prepare a files for a basename with typical compressed extension suffixs   
+        # prepare a files for a basename with typical compressed extension suffixs
+        uniq_file_count = 0 # gives us a value for files we want to make unique content
         #self.uncomp_filename = "foobar"
-        os.makedirs(self.tdir.name+"/"+"spam")
         for base in ['foobar','spam/eggs']:
             fh = open(self.tdir.name+"/"+base,"w")
+            fh.write(str(uniq_file_count))
+            uniq_file_count += 1
             fh.close()
             for ext1 in ["","tar"]:
                 suffixes = [base]
@@ -98,12 +101,16 @@ class TestFileScan(unittest.TestCase):
                     if ext2:
                         fn = fn + "." + ext2
                     fh = open(self.tdir.name+"/"+fn,"w")
+                    fh.write(str(uniq_file_count))
+                    uniq_file_count += 1
                     fh.close()
         
         # try to make files for representing old files
         os.makedirs(self.tdir.name+"/"+"chalupa")
         for fn in ["chalupa/batman.txt", "christopher.foo"]:
             fh = open(self.tdir.name+"/"+fn,"w")
+            fh.write(str(uniq_file_count))
+            uniq_file_count += 1
             fh.close()
             # use the following command to make old access time stamps:
             # /usr/bin/touch -a -t 201312311200 foo.bar # date is noon on Dec 31 2013
@@ -124,6 +131,8 @@ class TestFileScan(unittest.TestCase):
         Verfiy the report text is what we expect.
         """
         obs_report = file_scan.get_report_string(self.tdir.name)
+        
+        print(obs_report)
         self.assertEqual(obs_report, self.exp_report_txt)
     
     def tearDown(self):

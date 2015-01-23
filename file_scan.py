@@ -15,13 +15,64 @@ import os
 import glob
 import subprocess
 import time
-
+import re
 
 HEADER = "#"*30+"\n" # header line
 DAYS_OLD = 6 * 30
 # note: we can use "find {{dir}}* -atime +30" to get files not accessed for 30 days
 
 iwd = os.curdir
+
+def find_identical_files(directory):
+    """
+    return dict keyed by md5sum containing lists of files that share that
+    md5sum value and almost certainly have identical content
+    """
+    # go to the directory
+    os.chdir(directory)
+    
+    # Walk through directory
+    #for dName, sdName, fList in os.walk(inDIR):
+    #    for fileName in fList:
+    #        if fnmatch.fnmatch(fileName, pattern): # Match search string
+    #            fileList.append(os.path.join(dName, fileName))
+    
+    #find * -exec md5 '{}' \; # is the command that will essentially run md5 recursively
+    
+    # run the find command
+    try:
+        find = subprocess.Popen("find * -exec md5 '{}' \;",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    except:
+        raise
+    # get the standard output
+    out, err = find.communicate() # get the standard output
+    md5_results = out.decode().split("\n") # split the text into a list
+    
+    file_by_md5 = {}
+    for f in md5_results:
+        if f == '':
+            continue
+        p = re.split("\) = ",f)
+        print("Split returned "+str(p))
+        if len(p) < 2:
+            print("Failed to split "+f)
+        fn = re.sub("MD5 \(","",p[0])
+        if file_by_md5.__contains__(p[1]):
+            file_by_md5[p[1]] += [ fn ]
+        else:
+            file_by_md5[p[1]] = [ fn ]
+            
+    identical = {}
+    for md5 in file_by_md5.keys():
+        if len(file_by_md5[md5]) == 1:
+            continue
+        identical[md5] = file_by_md5[md5]
+    
+    print("md5's"+str(identical))
+    # go back to our starting directory 
+    os.chdir(iwd)
+    
+    return(identical)
 
 def find_old_files(directory):
     """
@@ -60,10 +111,18 @@ def get_report_string(directory):
     result = "##### file_scan.py Report\n"
     result += "##### "+datetime.datetime.now().ctime()+"\n"
     
+    # get files with identical content
+    result += HEADER+"#### redundant content - identical md5sum\n"
+    identical = find_identical_files(directory)
+    for md5 in identical.keys():
+        mfiles = identical[md5]
+        result += "### "+md5+"\n"
+        result += "\n".join(mfiles)+"\n"
+    
     # get list of old unused files
     old = find_old_files(directory)
 
-    result += HEADER+"#### files not accessed in "+str(DAYS_OLD)+" days\n"
+    result += HEADER+"#### files not accessed in "+str(DAYS_OLD)+" days"
     result += "\n".join(old)+"\n"
     return(result)
 
