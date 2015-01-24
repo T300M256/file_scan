@@ -73,6 +73,59 @@ def find_identical_files(directory):
     
     return(identical)
 
+def find_comp_uncomp(directory):
+    """
+    Return a list or dict of files that contains lists of file that maybe
+    co-existing compressed and uncompressed files based on shared base name
+    and common compressed file extensions (.Z, .gz, .zip, .bz2) as well as
+    the tar extension.
+    """
+    # go to the directory
+    os.chdir(directory)
+    
+    # run a ls command to get a complete list of files under the directory (could walk but OS portablitly is not a goal)
+    try:
+        find = subprocess.Popen("find *",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    except:
+        raise
+    # get the standard output
+    out, err = find.communicate() # get the standard output
+    files = out.decode().split() # split the text into a list
+    
+    # all extensions to check will be held here
+    exts = []
+    
+    # list of compressed extentions
+    primary_exts = ['bz2','gz','zip','Z']
+    
+    # list of intermediary extenstions (e.g. tar)
+    exts += primary_exts
+    for e in primary_exts:
+        exts.append("tar."+e)
+    
+    # add the singular tar compressed exstention
+    exts.append("tgz")
+    #print("Extensions: "+" ".join(exts))
+    
+    # go throught the file list and look for suspicious files
+    #  * a file basename coexists with a file name of basename plus an extension
+    
+    # 1 - go through the file list and pull out all files that end with one
+    #     of the extensions in the list
+    
+    # 2 - store the name of those files with the extension removed in a dict
+    
+    # 3 - go through all the files and those that are present in the dict need
+    #     to be captured as potentially redundant to the compressed version
+    
+    # Have to decide how to return them in a dict or just a list
+    
+    
+    # go back to our starting directory 
+    os.chdir(iwd)
+    
+    return(files)
+
 def find_old_files(directory):
     """
     return a list of files in the given directory that have not been accessed
@@ -114,15 +167,24 @@ def get_report_string(directory):
     # result the access time of files which old files uses
     old = find_old_files(directory)
     
+    # get potential compressed and compressed files
+    compressed = find_comp_uncomp(directory)
     
     # get files with identical content
-    result += HEADER+"#### redundant content - identical md5sum\n"
     identical = find_identical_files(directory)
+
+    # prepare identical file report text
+    result += HEADER+"#### redundant content - identical md5sum\n"
     for md5 in identical.keys():
         mfiles = identical[md5]
         result += "### "+md5+"\n"
         result += "\n".join(mfiles)+"\n"
-
+   
+    # prepare compressed/uncompressed report text
+    result += HEADER+"#### potential compressed and uncompressed files\n"
+    result += "\n".join(compressed)+"\n"
+   
+    # prepare old file report text
     result += HEADER+"#### files not accessed in "+str(DAYS_OLD)+" days\n"
     result += "\n".join(old)+"\n"
     return(result)
