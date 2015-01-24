@@ -21,7 +21,7 @@ HEADER = "#"*30+"\n" # header line
 DAYS_OLD = 6 * 30
 # note: we can use "find {{dir}}* -atime +30" to get files not accessed for 30 days
 
-iwd = os.curdir
+iwd = os.getcwd()
 
 def find_identical_files(directory):
     """
@@ -53,7 +53,7 @@ def find_identical_files(directory):
         if f == '':
             continue
         p = re.split("\) = ",f)
-        print("Split returned "+str(p))
+        #print("Split returned "+str(p))
         if len(p) < 2:
             print("Failed to split "+f)
         fn = re.sub("MD5 \(","",p[0])
@@ -68,7 +68,6 @@ def find_identical_files(directory):
             continue
         identical[md5] = file_by_md5[md5]
     
-    print("md5's"+str(identical))
     # go back to our starting directory 
     os.chdir(iwd)
     
@@ -79,7 +78,6 @@ def find_old_files(directory):
     return a list of files in the given directory that have not been accessed
     in the time specified by DAYS_OLD
     """
-    
     # go to the directory
     os.chdir(directory)
     
@@ -111,6 +109,12 @@ def get_report_string(directory):
     result = "##### file_scan.py Report\n"
     result += "##### "+datetime.datetime.now().ctime()+"\n"
     
+    # get list of old unused files - we have to do this first due to a flaw
+    # in that the find/md5 command used to find identical files appears to
+    # result the access time of files which old files uses
+    old = find_old_files(directory)
+    
+    
     # get files with identical content
     result += HEADER+"#### redundant content - identical md5sum\n"
     identical = find_identical_files(directory)
@@ -118,11 +122,8 @@ def get_report_string(directory):
         mfiles = identical[md5]
         result += "### "+md5+"\n"
         result += "\n".join(mfiles)+"\n"
-    
-    # get list of old unused files
-    old = find_old_files(directory)
 
-    result += HEADER+"#### files not accessed in "+str(DAYS_OLD)+" days"
+    result += HEADER+"#### files not accessed in "+str(DAYS_OLD)+" days\n"
     result += "\n".join(old)+"\n"
     return(result)
 

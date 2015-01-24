@@ -118,6 +118,7 @@ class TestFileScan(unittest.TestCase):
             if retcall != 0:
                 print("failed to change access time for "+fn)
                 sys.exit()
+            print(self.tdir.name)
         #print("You have one minute to check if files exist in "+self.tdir.name)
         #time.sleep(60)
         self.config_file = "config.py"
