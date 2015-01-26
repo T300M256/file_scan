@@ -35,20 +35,22 @@ EXP_REPORT_3 = """
 #### potential compressed and uncompressed files
 foobar
 foobar.Z
-foobar.gz
 foobar.bz2
+foobar.gz
 foobar.tar
 foobar.tar.Z
-foobar.tar.gz
 foobar.tar.bz2
-/spam/eggs
-/spam/eggs.Z
-/spam/eggs.gz
-/spam/eggs.bz2
-/spam/eggs.tar
-/spam/eggs.tar.Z
-/spam/eggs.tar.gz
-/spam/eggs.tar.bz2
+foobar.tar.gz
+foobar.zip
+spam/eggs
+spam/eggs.Z
+spam/eggs.bz2
+spam/eggs.gz
+spam/eggs.tar
+spam/eggs.tar.Z
+spam/eggs.tar.bz2
+spam/eggs.tar.gz
+spam/eggs.zip
 ##############################
 #### files not accessed in 180 days
 chalupa/batman.txt
@@ -75,7 +77,6 @@ class TestFileScan(unittest.TestCase):
         date_of_report = datetime.datetime.now().ctime()
         # construct the example report...adding dynamic date (e.g., date)
         self.exp_report_txt = EXP_REPORT_1 +"\n"+"##### "+ date_of_report +EXP_REPORT_2+EXP_REPORT_3        
-        #print(self.exp_report_txt)
         # create a temporary directory that should disappear when we are done
         self.tdir = tempfile.TemporaryDirectory(prefix="test_file_scan")
         # create some files for scenarious
@@ -100,6 +101,8 @@ class TestFileScan(unittest.TestCase):
                     fn = ".".join(suffixes)
                     if ext2:
                         fn = fn + "." + ext2
+                    if fn.__contains__(".tar.zip"):
+                        continue # not expecting this combination
                     fh = open(self.tdir.name+"/"+fn,"w")
                     fh.write(str(uniq_file_count))
                     uniq_file_count += 1
@@ -118,8 +121,6 @@ class TestFileScan(unittest.TestCase):
             if retcall != 0:
                 print("failed to change access time for "+fn)
                 sys.exit()
-            print(self.tdir.name)
-        #print("You have one minute to check if files exist in "+self.tdir.name)
         #time.sleep(60)
         self.config_file = "config.py"
         #cf = open(self.config_file,"w")
@@ -132,8 +133,8 @@ class TestFileScan(unittest.TestCase):
         Verfiy the report text is what we expect.
         """
         obs_report = file_scan.get_report_string(self.tdir.name)
+        #print(obs_report)
         
-        print(obs_report)
         self.assertEqual(obs_report, self.exp_report_txt)
     
     def tearDown(self):

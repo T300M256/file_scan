@@ -53,7 +53,6 @@ def find_identical_files(directory):
         if f == '':
             continue
         p = re.split("\) = ",f)
-        #print("Split returned "+str(p))
         if len(p) < 2:
             print("Failed to split "+f)
         fn = re.sub("MD5 \(","",p[0])
@@ -105,18 +104,40 @@ def find_comp_uncomp(directory):
     
     # add the singular tar compressed exstention
     exts.append("tgz")
-    #print("Extensions: "+" ".join(exts))
     
-    # go throught the file list and look for suspicious files
-    #  * a file basename coexists with a file name of basename plus an extension
+    # create a pattern to search for files with extensions
+    #pat = "$|(.+).".join(exts)
+    pat = "$|".join(exts)
+    pat += "$)"
+    pat = "(.+)\.("+pat
     
     # 1 - go through the file list and pull out all files that end with one
     #     of the extensions in the list
-    
-    # 2 - store the name of those files with the extension removed in a dict
+    cmp_files = {}
+    for fn in files:
+        # search or fullmatch
+        m = re.search(pat,fn)
+        if m:
+            # 2 - store the name of those files with the extension removed in a dict
+            # look slike a compressed file
+            prefix = m.groups()[0]
+            
+            if cmp_files.get(prefix):
+                # append to list value
+                cmp_files[prefix].append(fn)
+            else:
+                # create new list for value
+                cmp_files[prefix] = [fn]
     
     # 3 - go through all the files and those that are present in the dict need
     #     to be captured as potentially redundant to the compressed version
+    pos_red = []
+    for fn in files:
+        if cmp_files.get(fn):
+            pos_red.append(fn)
+            pos_red += cmp_files[fn]
+    
+    pos_red.sort()
     
     # Have to decide how to return them in a dict or just a list
     
@@ -124,7 +145,7 @@ def find_comp_uncomp(directory):
     # go back to our starting directory 
     os.chdir(iwd)
     
-    return(files)
+    return(pos_red)
 
 def find_old_files(directory):
     """
@@ -139,7 +160,6 @@ def find_old_files(directory):
     find_cmd.append("*")
     find_cmd.append("-atime")
     find_cmd.append("+"+str(DAYS_OLD))
-    # print("find command: "+" ".join(find_cmd)+"\n")
     
     # run the find command
     try:
