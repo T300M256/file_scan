@@ -62,6 +62,10 @@ EXP_CONFIG = """####################
 access_time = 30 * 6 # about 6 months or 180 days
 """
 
+#EXP_TIME_SPECS = {
+#    "Jun  8 01:00:45 2013":"201306080100.45"
+#}
+
 
 class TestFileScan(unittest.TestCase):
     
@@ -136,6 +140,19 @@ class TestFileScan(unittest.TestCase):
         #print(obs_report)
         
         self.assertEqual(obs_report, self.exp_report_txt)
+        
+    def testTimeSpec(self, ):
+        """
+        verifies that the time specification that is generated is what expected
+        e.g., [[CC]YY]MMDDhhmm[.SS]]
+        """
+        #EXP_TIME_SPECS
+        spec = file_scan.file_date_to_spec("Jun  8 01:00:45 2013")
+        self.assertEqual("201306080100.45", spec)
+        # Jan 25 22:07:30 2015 = 201501252207.30
+        spec2 = file_scan.file_date_to_spec("Jan 25 22:07:30 2015")
+        self.assertEqual("201501252207.30", spec2)
+    
     
     def tearDown(self):
         self.tdir.cleanup() # remove of temp directory

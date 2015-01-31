@@ -10,7 +10,7 @@ Copyright 2015
 January 18, 2015        Created
 
 """
-#import argparse
+import argparse
 import datetime
 import os
 import subprocess
@@ -21,9 +21,6 @@ import sys
 HEADER = "#"*30+"\n" # header line
 DAYS_OLD = 6 * 30
 
-#parser = argparse.ArgumentParser(description='Traverses given directory and reports on clear and potential redundant files and files that are not being used')
-#parser.add_argument('-d')
-
 iwd = os.getcwd()
 
 def file_date_to_spec(fdate):
@@ -33,11 +30,11 @@ def file_date_to_spec(fdate):
     command to change the time metadata for a file e.g.,:
     Jan 25 22:07:30 2015 = 201501252207.30
     """
-    d = fdate.split(" ")
+    d = re.split("\s+",fdate)
     nd = ""
     nd += d[3]
     mnth = "{0:02d}".format(list(calendar.month_abbr).index(d[0]))
-    nd = nd+mnth+d[1]
+    nd = nd+mnth+"{0:02d}".format(int(d[1]))
     tim = re.sub(":","",d[2],1)
     tim = re.sub(":",".",tim,1)
     nd += tim
@@ -267,4 +264,9 @@ def get_report_string(directory):
     return(result)
 
 if __name__ == "__main__":
-    print(get_report_string())
+ 
+    parser = argparse.ArgumentParser(description='Traverses given directory and reports on clear and potential redundant files and files that are not being used')
+    parser.add_argument("-d", "--directory", dest="dir", help="the directory to be scanned", required=True)
+    args = parser.parse_args()
+    
+    print(get_report_string(args.dir))
