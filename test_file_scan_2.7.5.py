@@ -120,7 +120,7 @@ class TestFileScan(unittest.TestCase):
                     fh.close()
                 # throughing in some additonal tests to address issue #5
         for fn in ["batman","batman.tar.gz"]:
-            fh = open(self.tdir.name+"/"+fn,"w")
+            fh = open(self.tdir+"/"+fn,"w")
             fh.write(str(uniq_file_count))
             uniq_file_count += 1
             fh.close()
