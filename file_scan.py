@@ -75,7 +75,8 @@ def find_identical_files(directory):
         at = re.search("\"[^\"]+\"",s).group(0)
         at = at.strip('"')
         dspec = file_date_to_spec(at)
-        ss = s.split(" ")
+        #ss = s.split(" ")
+        ss = re.split("\s+",s)
         fn = " ".join(ss[27:])
         fdates[fn] = dspec
     
@@ -100,6 +101,7 @@ def find_identical_files(directory):
         fnn = re.sub("MD5 \(","",p[0])
         if fnn != fn:
             print("The file returned by md5 was not was not what was expected: "+fnn)
+            print("Expected: "+fn)
         if file_by_md5.__contains__(p[1]):
             file_by_md5[p[1]] += [ fn ]
         else:

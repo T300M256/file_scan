@@ -121,7 +121,8 @@ class TestFileScan(unittest.TestCase):
             fh.close()
             # use the following command to make old access time stamps:
             # /usr/bin/touch -a -t 201312311200 foo.bar # date is noon on Dec 31 2013
-            retcall = call(["/usr/bin/touch","-a","-t","201312311200",self.tdir.name+"/"+fn])
+            #retcall = call(["/usr/bin/touch","-a","-t","201312311200",self.tdir.name+"/"+fn])
+            retcall = call(["/usr/bin/touch","-a","-t","201302021200",self.tdir.name+"/"+fn])
             if retcall != 0:
                 print("failed to change access time for "+fn)
                 sys.exit()
