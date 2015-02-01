@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python
 
 """
 test suite for file_scan. Creates some directories and files to interogate.
@@ -7,6 +7,8 @@ Todd Moughamer
 Copyright 2015
 
 January 18, 2015        Created
+
+February 1, 2015	Modified to work with Python 2.7.5 (mainly temp file stuff)
 
 """
 
@@ -33,8 +35,6 @@ spam/same_content3.txt"""
 EXP_REPORT_3 = """
 ##############################
 #### potential compressed and uncompressed files
-batman
-batman.tar.gz
 foobar
 foobar.Z
 foobar.bz2
@@ -84,18 +84,21 @@ class TestFileScan(unittest.TestCase):
         # construct the example report...adding dynamic date (e.g., date)
         self.exp_report_txt = EXP_REPORT_1 +"\n"+"##### "+ date_of_report +EXP_REPORT_2+EXP_REPORT_3        
         # create a temporary directory that should disappear when we are done
-        self.tdir = tempfile.TemporaryDirectory(prefix="test_file_scan")
+        #self.tdir = tempfile.TemporaryDirectory(prefix="test_file_scan")
+        self.tdir = tempfile.mkdtemp(prefix='test_file_scan')
+        #print(self.tdir)
+	#sys.exit()
         # create some files for scenarious
-        os.makedirs(self.tdir.name+"/"+"spam")
+        os.makedirs(self.tdir+"/"+"spam")
         for fn in ["same_content1.txt", "same_content2.txt", "spam/same_content3.txt"]:
-            fh = open(self.tdir.name+"/"+fn,"w")
+            fh = open(self.tdir+"/"+fn,"w")
             fh.write("arbitrary content")
             fh.close()
         # prepare a files for a basename with typical compressed extension suffixs
         uniq_file_count = 0 # gives us a value for files we want to make unique content
         #self.uncomp_filename = "foobar"
         for base in ['foobar','spam/eggs']:
-            fh = open(self.tdir.name+"/"+base,"w")
+            fh = open(self.tdir+"/"+base,"w")
             fh.write(str(uniq_file_count))
             uniq_file_count += 1
             fh.close()
@@ -109,31 +112,22 @@ class TestFileScan(unittest.TestCase):
                         fn = fn + "." + ext2
                     if fn.__contains__(".tar.zip"):
                         continue # not expecting this combination
-                    fh = open(self.tdir.name+"/"+fn,"w")
+                    fh = open(self.tdir+"/"+fn,"w")
                     fh.write(str(uniq_file_count))
                     uniq_file_count += 1
                     fh.close()
-        # throughing in some additonal tests to address issue #5
-        for fn in ["batman","batman.tar.gz"]:
-            fh = open(self.tdir.name+"/"+fn,"w")
-            fh.write(str(uniq_file_count))
-            uniq_file_count += 1
-            fh.close()
-            
-        #print(self.tdir.name)
-        #time.sleep(60)
         
         # try to make files for representing old files
-        os.makedirs(self.tdir.name+"/"+"chalupa")
+        os.makedirs(self.tdir+"/"+"chalupa")
         for fn in ["chalupa/batman.txt", "christopher.foo"]:
-            fh = open(self.tdir.name+"/"+fn,"w")
+            fh = open(self.tdir+"/"+fn,"w")
             fh.write(str(uniq_file_count))
             uniq_file_count += 1
             fh.close()
             # use the following command to make old access time stamps:
             # /usr/bin/touch -a -t 201312311200 foo.bar # date is noon on Dec 31 2013
-            #retcall = call(["/usr/bin/touch","-a","-t","201312311200",self.tdir.name+"/"+fn])
-            retcall = call(["/usr/bin/touch","-a","-t","201302021200",self.tdir.name+"/"+fn])
+            #retcall = call(["/usr/bin/touch","-a","-t","201312311200",self.tdir+"/"+fn])
+            retcall = call(["/usr/bin/touch","-a","-t","201302021200",self.tdir+"/"+fn])
             if retcall != 0:
                 print("failed to change access time for "+fn)
                 sys.exit()
@@ -148,7 +142,7 @@ class TestFileScan(unittest.TestCase):
         """
         Verfiy the report text is what we expect.
         """
-        obs_report = file_scan.get_report_string(self.tdir.name)
+        obs_report = file_scan.get_report_string(self.tdir)
         #print(obs_report)
         
         self.assertEqual(obs_report, self.exp_report_txt)
@@ -167,7 +161,16 @@ class TestFileScan(unittest.TestCase):
     
     
     def tearDown(self):
-        self.tdir.cleanup() # remove of temp directory
+        #self.tdir.cleanup() # remove of temp directory
+        #tfn = glob.glob(self.tdir+"/*")
+        tfn = glob.glob(self.tdir+"/*/*")
+        tfn += glob.glob(self.tdir+"/*")
+        for fn in tfn:
+            if os.path.isdir(fn):
+                os.rmdir(fn)
+            else:
+                os.remove(fn)
+        os.rmdir(self.tdir)
         #os.unlink(self.config_file)
     
 if __name__ == "__main__":

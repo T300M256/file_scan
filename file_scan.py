@@ -137,7 +137,7 @@ def find_comp_uncomp(directory):
     # go to the directory
     os.chdir(directory)
     
-    # run a ls command to get a complete list of files under the directory (could walk but OS portablitly is not a goal)
+    # run a find command to get a complete list of files under the directory (could walk but OS portablitly is not a goal)
     try:
         find = subprocess.Popen("find *",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     except:
@@ -150,22 +150,24 @@ def find_comp_uncomp(directory):
     exts = []
     
     # list of compressed extentions
-    primary_exts = ['bz2','gz','zip','Z']
+    primary_exts = ['bz2','gz','tar','zip','Z']
     
     # list of intermediary extenstions (e.g. tar)
     exts += primary_exts
     for e in primary_exts:
+        if(e == "tar"):
+            # ignore tar.tar 
+            continue
         exts.append("tar."+e)
     
     # add the singular tar compressed exstention
     exts.append("tgz")
     
     # create a pattern to search for files with extensions
-    #pat = "$|(.+).".join(exts)
     pat = "$|".join(exts)
     pat += "$)"
     pat = "(.+)\.("+pat
-    
+        
     # 1 - go through the file list and pull out all files that end with one
     #     of the extensions in the list
     cmp_files = {}
@@ -177,20 +179,33 @@ def find_comp_uncomp(directory):
             # look slike a compressed file
             prefix = m.groups()[0]
             
-            if cmp_files.get(prefix):
-                # append to list value
-                cmp_files[prefix].append(fn)
+            # if a .tar remains we need to look for if with out the tar too
+            prefixes = []
+            m2 = re.search('(.+)\.tar$', prefix)
+            if m2:
+                preprefix = m2.groups()[0]
+                prefixes = [prefix, preprefix]
             else:
-                # create new list for value
-                cmp_files[prefix] = [fn]
+                prefixes = [prefix]
+            
+            for pf in prefixes:
+                if cmp_files.get(pf):
+                    # append to list value
+                    cmp_files[pf].append(fn)
+                else:
+                    # create new list for value
+                    cmp_files[pf] = [fn]
     
     # 3 - go through all the files and those that are present in the dict need
     #     to be captured as potentially redundant to the compressed version
+    red_set = set()
     pos_red = []
     for fn in files:
         if cmp_files.get(fn):
-            pos_red.append(fn)
-            pos_red += cmp_files[fn]
+            red_set.add(fn)
+            red_set.update(set(cmp_files[fn]))
+    
+    pos_red += list(red_set)
     
     pos_red.sort()
     
