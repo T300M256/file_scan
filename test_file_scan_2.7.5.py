@@ -35,6 +35,8 @@ spam/same_content3.txt"""
 EXP_REPORT_3 = """
 ##############################
 #### potential compressed and uncompressed files
+batman
+batman.tar.gz
 foobar
 foobar.Z
 foobar.bz2
@@ -116,7 +118,13 @@ class TestFileScan(unittest.TestCase):
                     fh.write(str(uniq_file_count))
                     uniq_file_count += 1
                     fh.close()
-        
+                # throughing in some additonal tests to address issue #5
+        for fn in ["batman","batman.tar.gz"]:
+            fh = open(self.tdir.name+"/"+fn,"w")
+            fh.write(str(uniq_file_count))
+            uniq_file_count += 1
+            fh.close()
+	
         # try to make files for representing old files
         os.makedirs(self.tdir+"/"+"chalupa")
         for fn in ["chalupa/batman.txt", "christopher.foo"]:
