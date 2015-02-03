@@ -38,6 +38,11 @@ def file_date_to_spec(fdate):
     tim = re.sub(":","",d[2],1)
     tim = re.sub(":",".",tim,1)
     nd += tim
+    #if not re.match("^\d{12}.\d\d$", nd): # didn't seem to like this compact patter
+    if not re.match("^\d\d\d\d\d\d\d\d\d\d\d\d\.\d\d$", nd):
+        print("file_date_to_spec failed to produce a valid time specification")
+        print(fdate+" was given but got "+nd)
+        sys.exit()
     return(nd)
 
 def find_identical_files(directory):
